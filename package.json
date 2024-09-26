@@ -1,0 +1,20 @@
+{
+  "name": "backendself",
+  "version": "1.0.0",
+  "description": "practicing backend ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mongodb",
+    "nodeJS",
+    "express"
+  ],
+  "author": "Sangam rai",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.0",
+    "mongoose": "^8.6.3"
+  }
+}
