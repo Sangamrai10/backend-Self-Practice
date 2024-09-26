@@ -1,13 +1,13 @@
 #self practice on backend!!
 
-#starting
-1.create a folder to store your files 
-2.open the folder on code editor
-3.create "#README.md" file
-4.create git repository on github
-5.return to vscode and initialize your repository and commit your first file
+#starting  
+1.create a folder to store your files   
+2.open the folder on code editor  
+3.create "#README.md" file  
+4.create git repository on github  
+5.return to vscode and initialize your repository and commit your first file  
 
-#set-up
+#set-up  
 1.initialize your project with "npm init"
 2.install "expressJs"
 3.install "dotenv" and configure it for environment variable 
