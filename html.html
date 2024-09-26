@@ -17,13 +17,13 @@
         let dat;
         fetch(url).then(res => {
             if (!res.ok) {
-                throw new Error("network error")
+                result.innerHTML="network error"
             }
             return res.text()
         }).then(data => {
             dat = data
             result.innerHTML = dat
-        })
+        }).catch((err)=>{result.innerHTML = "Connection refused!!"})
     </script>
 </body>
 
