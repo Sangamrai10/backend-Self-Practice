@@ -5,7 +5,7 @@
 2.open the folder on code editor
 3.create "#README.md" file
 4.create git repository on github
-5.return to vscode and initialize your repository
+5.return to vscode and initialize your repository and commit your first file
 
 #set-up
 1.initialize your project with "npm init"
@@ -17,6 +17,5 @@
 7.install "mongoose" for data modeling
 8.install "cloudinary" for hosting your image or videos and extract urls
 9.install "multer" for upload your materials to cloudinary
-10.install "bycrypt" for increption
+10.install "bycrypt" for encryption
 11.install "jsonwebtoken" for tokens
-12.
