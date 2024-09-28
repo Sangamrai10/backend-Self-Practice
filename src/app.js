@@ -19,8 +19,11 @@ app.use(express.static("public"))
 
 
 
-app.get('/',(req, res)=>{
+app.use('/',(req, res)=>{
     res.send("Hello world")
 })
 
+
+// import userRouter from "./routes/user.routes.js";
+// app.use("api/v1/users",userRouter)
 export {app}

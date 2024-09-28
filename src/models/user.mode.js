@@ -26,3 +26,5 @@ const userSchema = new Schema({
         required: true
     }
 },{timestamps: true})
+
+export const User=mongoose.model("User", userSchema)
