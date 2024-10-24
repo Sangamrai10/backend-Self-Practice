@@ -2,35 +2,32 @@ import { asyncHandler } from '../utils/asyncHandler.js'
 import { apiError } from '../utils/apiError.js'
 import { User } from '../models/user.mode.js'
 import { apiResponse } from '../utils/apiResponse.js'
+import { uploadOnCloudinary } from '../utils/uploader.js'
 
 const registerUser = asyncHandler(async (req, res) => {
-    //get user details from frontend
-    //validate-not empty
-    //check if user already exists: username email
-    //check for images, avatar
-    //upload them to cloudinary
-    //create user object - create entry in db
-    //remove password and refresh token field from response
-    //check for user creation
-    //return res
 
+
+    //get user details from frontend
     const { username, email, password } = req.body
 
+    //validate-not empty
     if ([username, email, password].some((field) => field?.trim() === "")) {
         throw new apiError(400, "all fields are required!")
     }
 
-    const useraExists = User.findOne({
+    //check if user already exists: username email
+    const useraExists = await User.findOne({
         $or: [
             { username },
             { email }
         ]
     })
 
-    if (useraExists) {
+    if (!useraExists) {
         throw new apiError(400, " User with the username and email already exists!!")
     }
 
+    //check for images, avatar
     const avatarPath = req.files?.avatar[0]?.path
     const coImg = req.files?.coImg[0]?.path
 
@@ -38,9 +35,87 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "avatar is required!!")
     }
 
+    //upload them to cloudinary
+    const avatar = await uploadOnCloudinary(avatarPath)
+    const cover = await uploadOnCloudinary(coImg)
+
+    //create user object - create entry in db
+    const user = await User.create({
+        fullName,
+        avatar: avatar.url,
+        coverImage: cover?.url || "",
+        email,
+        password,
+        username: username.toLowerCase()
+    })
+
+    //remove password and refresh token field from response
+    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+
+    //check for user creation
+    if (!createdUser) {
+        throw new apiError(400, "user regester failed!")
+    }
+    
+    //return res
     return res.status(200).json(
-        new apiResponse(200, data, "user entry success!!")
+        new apiResponse(200, createdUser, "user entry success!!")
     )
 })
 
-export { registerUser}
+const generateAccessAndRefreshToken = asyncHandler(async (userId) => {
+    const user = await User.findById(userId)
+    const accessToken = user.generateAccessToken()
+    const refreshToken = user.generateRefreshToken()
+
+    user.refreshToken = refreshToken
+    await user.save({ validateBeforeSave: false })
+
+    return { accessToken, refreshToken }
+})
+
+const loginUser = asyncHandler(async (req, res) => {
+    //get email or username and password from req body
+    const { email, username, password } = req.body
+
+    //validate username or email
+    if (!(username || email)) {
+        throw new apiError(400, "Email or username is required!")
+    }
+
+    //find user
+    const user = await User.findOne({
+        $or: [{ username, email }]
+    })
+
+    //check if user exist
+    if (!user) {
+        throw new apiError(400, "User doesn't exists!")
+    }
+
+    //check password
+    const isPasswordValid = await user.isPasswordCorrect(password)
+    if (!isPasswordValid) {
+        throw new apiError(400, "Invalid password!")
+    }
+
+    //generate access and refresh token
+    const { accessToken, refreshToken } = generateAccessAndRefreshToken(user)
+
+
+    //send cookies and exclude password and refreshToken 
+    const loggedIn = await User.findById(user._id).select("-password -refreshToken")
+    const option = {
+        httpOnly: true,
+        secure: true
+    }
+    //return data
+    return res.status(200)
+        .cookies("accessToken", accessToken, option)
+        .cookies("refreshToken", refreshToken, option)
+        .json(new apiResponse(200,
+            { user: loggedIn, accessToken, refreshToken },
+            "You're logged in!."
+        ))
+})
+export { registerUser, loginUser }
