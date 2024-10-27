@@ -1,13 +1,19 @@
 import {app} from "./app.js"
-import {apiError} from './utils/apiError.js'
 import dotenv from 'dotenv'
-
+import connectDB from "./database/database.js"
 dotenv.config({
     path:"./.env"
 })
-app.listen(process.env.PORT || 8000,()=>{
-    console.log(`server running at: http://localhost:${process.env.PORT}`)
+
+connectDB()
+.then(()=>{
+    app.listen(process.env.PORT || 8000, ()=>{
+        console.log(`Server running at http://localhost:${process.env.PORT}`)
+    })
+    app.on("error",()=>{
+        console.log("Server error!!", error)
+    })
 })
-app.on("error",()=>{
-throw new apiError(500, "server connection failed!")
+.catch((error)=>{
+    console.log("Database connection failed!", error)
 })

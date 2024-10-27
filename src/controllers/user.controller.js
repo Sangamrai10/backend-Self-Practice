@@ -8,10 +8,10 @@ const registerUser = asyncHandler(async (req, res) => {
 
 
     //get user details from frontend
-    const { username, email, password } = req.body
+    const { fullName, username, email, password } = req.body
 
     //validate-not empty
-    if ([username, email, password].some((field) => field?.trim() === "")) {
+    if ([fullName, username, email, password].some((field) => field?.trim() === "")) {
         throw new apiError(400, "all fields are required!")
     }
 
@@ -23,13 +23,13 @@ const registerUser = asyncHandler(async (req, res) => {
         ]
     })
 
-    if (!useraExists) {
+    if (useraExists) {
         throw new apiError(400, " User with the username and email already exists!!")
     }
 
     //check for images, avatar
     const avatarPath = req.files?.avatar[0]?.path
-    const coImg = req.files?.coImg[0]?.path
+    const coImg = req.files?.coverImage[0]?.path
 
     if (!avatarPath) {
         throw new apiError(400, "avatar is required!!")
@@ -38,6 +38,10 @@ const registerUser = asyncHandler(async (req, res) => {
     //upload them to cloudinary
     const avatar = await uploadOnCloudinary(avatarPath)
     const cover = await uploadOnCloudinary(coImg)
+
+    if (!avatar) {
+        throw new apiError(400, "avatar uploading failed!!")
+    }
 
     //create user object - create entry in db
     const user = await User.create({
