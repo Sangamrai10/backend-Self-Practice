@@ -6,7 +6,6 @@ import { uploadOnCloudinary } from '../utils/uploader.js'
 
 const registerUser = asyncHandler(async (req, res) => {
 
-
     //get user details from frontend
     const { fullName, username, email, password } = req.body
 
@@ -16,14 +15,14 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     //check if user already exists: username email
-    const useraExists = await User.findOne({
+    const userExists = await User.findOne({
         $or: [
             { username },
             { email }
         ]
     })
 
-    if (useraExists) {
+    if (userExists) {
         throw new apiError(400, " User with the username and email already exists!!")
     }
 
@@ -36,18 +35,18 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     //upload them to cloudinary
-    const avatar = await uploadOnCloudinary(avatarPath)
-    const cover = await uploadOnCloudinary(coImg)
+    const avatarImage = await uploadOnCloudinary(avatarPath)
+    const coverImage = await uploadOnCloudinary(coImg)
 
-    if (!avatar) {
+    if (!avatarImage) {
         throw new apiError(400, "avatar uploading failed!!")
     }
 
     //create user object - create entry in db
     const user = await User.create({
         fullName,
-        avatar: avatar.url,
-        coverImage: cover?.url || "",
+        avatar: avatarImage.url,
+        coverImage: coverImage?.url || "",
         email,
         password,
         username: username.toLowerCase()
@@ -60,7 +59,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (!createdUser) {
         throw new apiError(400, "user regester failed!")
     }
-    
+
     //return res
     return res.status(200).json(
         new apiResponse(200, createdUser, "user entry success!!")
@@ -89,7 +88,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //find user
     const user = await User.findOne({
-        $or: [{ username, email }]
+        $or: [{ username},{ email }]
     })
 
     //check if user exist
@@ -103,7 +102,7 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new apiError(400, "Invalid password!")
     }
 
-    //generate access and refresh token
+    //generate access and refresh token 
     const { accessToken, refreshToken } = generateAccessAndRefreshToken(user)
 
 
