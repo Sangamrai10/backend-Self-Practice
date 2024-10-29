@@ -67,16 +67,23 @@ const registerUser = asyncHandler(async (req, res) => {
     )
 })
 
-const generateAccessAndRefreshToken = asyncHandler(async (userId) => {
-    const user = await User.findById(userId)
-    const accessToken = user.generateAccessToken()
-    const refreshToken = user.generateRefreshToken()
+const generateAccessAndRefreshToken = async (userId) => {
+    try {
+        const user = await User.findById(userId)
+        const accessToken = user.generateAccessToken()
+        const refreshToken = user.generateRefreshToken()
 
-    user.refreshToken = refreshToken
-    await user.save({ validateBeforeSave: false })
+        user.refreshToken = refreshToken
+        await user.save({ validateBeforeSave: false })
 
-    return { accessToken, refreshToken }
-})
+        return {
+            accessToken,
+            refreshToken
+        }
+    } catch (error) {
+        throw new apiError(500, error.message)
+    }
+}
 
 const loginUser = asyncHandler(async (req, res) => {
     //get email or username and password from req body
@@ -104,19 +111,20 @@ const loginUser = asyncHandler(async (req, res) => {
     }
 
     //generate access and refresh token 
-    const { accessToken, refreshToken } = generateAccessAndRefreshToken(user)
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user)
 
 
     //send cookies and exclude password and refreshToken 
     const loggedIn = await User.findById(user._id).select("-password -refreshToken")
+
     const option = {
         httpOnly: true,
         secure: true
     }
     //return data
     return res.status(200)
-        .cookies("accessToken", accessToken, option)
-        .cookies("refreshToken", refreshToken, option)
+        .cookie("accessToken", accessToken, option)
+        .cookie("refreshToken", refreshToken, option)
         .json(new apiResponse(200,
             { user: loggedIn, accessToken, refreshToken },
             "You're logged in!."
@@ -269,13 +277,13 @@ const updateAccount = asyncHandler(async (req, res) => {
         .json(new apiResponse(200, user, "Updated successfully!!"))
 })
 
-const updateAvatar = asyncHandler(async(req, res)=>{
+const updateAvatar = asyncHandler(async (req, res) => {
 
     //extract avatar path from req obj
-    const avatarPath= req.files?.path
+    const avatarPath = req.files?.path
 
     //check if avatar being recieved
-    if(!avatarPath){
+    if (!avatarPath) {
         throw new apiError(404, "avatar not found!")
     }
 
@@ -283,7 +291,7 @@ const updateAvatar = asyncHandler(async(req, res)=>{
     const avatar = await uploadOnCloudinary(avatarPath)
 
     //check if avatar uploaded 
-    if(!avatar.url){
+    if (!avatar.url) {
         throw new apiError(400, "avatar upload failed!")
     }
 
@@ -294,34 +302,34 @@ const updateAvatar = asyncHandler(async(req, res)=>{
         req.user._id,
         {
             //set new avatar
-            $set:{
+            $set: {
                 avatar: avatar.url
             }
         },
-        {new: true}
+        { new: true }
 
         //select sensitive fields
     ).select("-password")
 
     // return response in json format 
     return res.status(200)
-    .json(new apiResponse(200, user, "Updated successfully!!"))
+        .json(new apiResponse(200, user, "Updated successfully!!"))
 })
 
-const updateCover =asyncHandler(async(req, res)=>{
+const updateCover = asyncHandler(async (req, res) => {
 
     //get cover image path from req obj
     const coverPath = req.files?.path
 
     //check if cover being recieved
-    if(!coverPath){
+    if (!coverPath) {
         throw new apiError(404, "Cover image not found!")
     }
 
     //upload it on cloudinary
     const cover = await uploadOnCloudinary(coverPath)
     //check if cover uploaded
-    if(!cover.url){
+    if (!cover.url) {
         throw new apiError(400, "coverImage Upload failed!!")
     }
 
@@ -331,17 +339,17 @@ const updateCover =asyncHandler(async(req, res)=>{
         req.user._id,
         {
             //set new coverImage
-            $set:{
+            $set: {
                 coverImage: cover.url
             }
-        },{new: true}
+        }, { new: true }
 
         //select sensitive fields
     ).select("-password")
 
     //return response in json format
     return res.status(200)
-    .json(new apiResponse(200, user, "Updated successfully!!"))
+        .json(new apiResponse(200, user, "Updated successfully!!"))
 })
 
 export {
