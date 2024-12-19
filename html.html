@@ -8,22 +8,36 @@
 </head>
 
 <body>
-    <div id="result"></div> 
+    <div id="result"></div>
+    <h1>User Profile</h1>
+    <input type="file" id="im"> <br>
+    <button type="submit" onclick="abc()">send</button>
+    <div id="userName"></div>
+
 
     <script>
+        async function abc() {
+            let image=document.getElementById("im")
+            const response = await fetch("http://localhost:8000/api/v1/users/", {
+                method: "POST",
+                body: JSON.stringify(image),
+                headers: myHeaders,
+            });
+        }
         let result = document.getElementById("result")
 
-        let url = "http://localhost:8000"
+        let url = "http://localhost:8000/api/v1/users"
         let dat;
         fetch(url).then(res => {
             if (!res.ok) {
-                result.innerHTML="network error"
+                result.innerHTML = "network error"
             }
-            return res.text()
+            return res.json()
         }).then(data => {
             dat = data
-            result.innerHTML = dat
-        }).catch((err)=>{result.innerHTML = "Connection refused!!"})
+            result.innerHTML = JSON.stringify(data, null, 2)
+
+        }).catch((err) => { result.innerHTML = "Connection refused!!" })
     </script>
 </body>
 
